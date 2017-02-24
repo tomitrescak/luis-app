@@ -2,25 +2,19 @@
 
 ## Quick Start 
 
-To run Luis, first install all dependencies with `yarn`. then:
+To run Luis, first install all dependencies with `yarn`. then run with `npm run luis` or `npm start`.
 
-```
-npm run luis
-// or
-npm start
-```
-
-To run only application do:
-
-```
-npm run app
-```
+To run application only do `npm run app`
 
 ## TL;DR;
 
 LUIS (**L**ist of **U**ser **I**nterface**s**) is the React component catalogue that uses the power of FuseBox to display and live reload React components almost instantly, independent of the size of the application.
 
+![luis](https://cloud.githubusercontent.com/assets/2682705/23295353/41a809ba-fac4-11e6-8464-b8690a38aa74.gif)
+
 Moreover, Luis runs your tests in the browser, tests and manages the server-side snapshots, displays possible differences and updates them when necessary.
+
+![luis2](https://cloud.githubusercontent.com/assets/2682705/23295366/570b4c2c-fac4-11e6-98f3-de2503887387.gif)
 
 ## Introduction
 
@@ -67,7 +61,9 @@ describe('User', () => {
 });
 ```
 
-And this is LUIS’s UI, show in the Profile story. Please note, how describe statements created folders User and Profile.
+Look how "handsome" is LUIS (PR welcome :). This Figure shows the Profile story. Please note, how describe statements created folders User and Profile.
+
+<img width="843" alt="screen shot 2017-02-23 at 10 34 53 pm" src="https://cloud.githubusercontent.com/assets/2682705/23295412/9c6d1192-fac4-11e6-9508-7ad89354c46c.png">
 
 ## API
 
@@ -88,3 +84,8 @@ Of course you can use original storybook methods: `storiesOf, add, addWithInfo`
 LUIS exists in the form of a [package as well](https://www.npmjs.com/package/luis), exposing all the necessary UIs and handlers and can be imported into your existing application, yet in the current FuseBox implementation, the hot module reload does not work properly with React Components served from the external package.
 Please give LUIS a go, fasten your seat belts and enjoy the ride! I will welcome any feedback.
 
+## Vital Information
+
+To run LUIS with snapshot support, you need to run both client and server. If you do not wish to use snapshots, you can run client only. 
+
+The startup file for the application is 'src/index.tsx', while for LUIS it is 'src/stories.tsx'. 
