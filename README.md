@@ -13,6 +13,7 @@ LUIS (**L**ist of **U**ser **I**nterface**s**) is the React component catalogue 
 Following are stats for my application with 976 typescript sources and 56 imported packages:
 
 **StoryBook** — Start `36 seconds`, Hot Module Reload with sourcemaps `9 seconds`.
+
 **LUIS** — Start `400 ms`, Hot Module Reload with sourcemaps `750 ms`. Now that's what I call a significant difference.
 
 ![luis](https://cloud.githubusercontent.com/assets/2682705/23295353/41a809ba-fac4-11e6-8464-b8690a38aa74.gif)
