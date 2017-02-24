@@ -1,22 +1,19 @@
 import * as React from 'react';
 
-export const Comp = <div>Component</div>;
+import { proxy } from 'proxyrequire';
+
+const BodyProxy = proxy(() => require('../body').Body, {
+  '../containers/container': { Container: () => <div>[Stubbed Container]</div> }
+});
 
 describe('Body', () => {
-  story('Default', () => {
 
-    it ('is true', function() {
-      expect(true).toBe(true);
-    });
-
-    return Comp;
-  });
-
-  story('Extended', () => {
+  story('Stubbed', () => {
+    const proxiedBody = <BodyProxy />
     it ('is false', function() {
       expect(true).toBe(false);
     });
 
-    return Comp;
+    return proxiedBody;
   })
 });
