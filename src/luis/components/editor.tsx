@@ -99,7 +99,7 @@ export class MonacoEditor extends React.Component<Props, State> {
   }
 
   shouldComponentUpdate(nextProps: Props, nextState: State) {
-    if (this.props.clientValue !== nextProps.clientValue) {
+    if (this.props.clientValue !== nextProps.clientValue || this.props.serverValue !== nextProps.serverValue) {
       let original = monaco.editor.createModel(nextProps.clientValue, 'text/plain');
       let modified = monaco.editor.createModel(nextProps.serverValue, 'text/plain');
       monaco.editor.setModelLanguage(original, 'json');
