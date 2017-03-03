@@ -1,8 +1,8 @@
-import { Story, catalogue } from './story';
+import { Story } from './story';
 import { StoryGroup } from './louis';
 import toJson from 'enzyme-to-json';
-
-declare var fetch: any;
+import { formatComponent, trim } from './state/helpers';
+import { state } from './state/state';
 
 let beforeEachFunc = null;
 let afterEachFunc = null;
@@ -69,7 +69,7 @@ function run(item: QueuedItem) {
     item.story.component();
   } catch (e) {
     console.error(e);
-    catalogue.update(testName, e);
+    state.catalogue.update(testName, e);
   };
   testMode = false;
 
@@ -89,10 +89,18 @@ export const it = function (desc, func) {
   }
   testName.push(desc);
 
+  if (state.catalogue.hasTest(testName) && currentItem.story !== state.viewedStory) {
+    // console.log('Ignoring tests: ' + testName.join(' '));
+    testName.pop();
+    return;
+  } else {
+    // console.log('Running tests: ' + testName.join(' '));
+  }
+
   if (beforeEachFunc) { beforeEachFunc(); }
   try {
     func();
-    catalogue.update(testName);
+    state.catalogue.update(testName);
   } catch (e) {
     if (console.group) {
       console.group('Failed: ' + testName.join(' > '));
@@ -101,7 +109,7 @@ export const it = function (desc, func) {
     if (console.group) {
       console.groupEnd();
     }
-    catalogue.update(testName, e.message);
+    state.catalogue.update(testName, e.message);
   }
 
   if (afterEachFunc) { afterEachFunc(); }
@@ -110,33 +118,10 @@ export const it = function (desc, func) {
 
 // snapshot testing
 
-// const ReactElementPlugin = require('./pretty-print/react_element');
-import * as ReactElementPlugin from 'pretty-format/build/plugins/ReactElement';
-import * as ReactTestComponentPlugin from 'pretty-format/build/plugins/ReactTestComponent';
-// const ReactTestComponentPlugin = require('./pretty-print/react_test_component');
-import * as prettyFormat from 'pretty-format';
-
-let PLUGINS = [ReactElementPlugin, ReactTestComponentPlugin];
-
-export function formatComponent (component: any) {
-  return prettyFormat(component, {
-    escapeRegex: true,
-    plugins: PLUGINS,
-    printFunctionName: true,
-  });
-}
-
-function trim(str: string) {
-  str = str.trim();
-  if (str[0] === '"') {
-    str = str.substring(1, str.length - 2).trim().replace(/\\"/g, '"');
-  }
-  return str;
-}
 
 export function createClientSnapshotMatcher(expect: any) {
   expect.extend({
-    toMatchSnapshot(this: { actual: any}) {
+    toMatchSnapshot(actual: any) {
       let story = currentItem.story;
       let currentTestName = [...testName];
 
@@ -145,12 +130,8 @@ export function createClientSnapshotMatcher(expect: any) {
       //   'expected %s to be an HTML color',
       //   this.actual
       // )
-      let snap = toJson(this.actual);
-      let ser = prettyFormat(snap, {
-        escapeRegex: true,
-        plugins: PLUGINS,
-        printFunctionName: false,
-      });
+      let snap = toJson(actual);
+      let ser = formatComponent(snap);
 
       // get snapshot from server
       const name = testName.join(' ');
@@ -167,10 +148,8 @@ export function createClientSnapshotMatcher(expect: any) {
             // console.log('SAME');
             matching = true;
           } else {
-            // console.log('DIFFER');
-
             // update all tests and update current tests
-            catalogue.update(currentTestName, 'Snaphots do not match!');
+            state.catalogue.update(currentTestName, 'Snaphots do not match!');
           }
 
           const snapshot = {
@@ -184,7 +163,7 @@ export function createClientSnapshotMatcher(expect: any) {
             story.activeSnapshot = 0;
           }
         });
-      return this;
+      return {message: '', pass: true};
     }
   });
 }

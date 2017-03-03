@@ -7,3 +7,33 @@ exports[`Header Default View Renders correctly 1`] = `
   </h1>
 </Component>
 `;
+
+exports[`Header With Decorator Decorated View Renders correctly 1`] = `
+<Component>
+  <Header
+    content="Application Header"
+    icon="user"
+  >
+    <div
+      className="ui header"
+    >
+      <Icon
+        as="i"
+        name="user"
+      >
+        <i
+          aria-hidden="true"
+          className="user icon"
+        />
+      </Icon>
+      <HeaderContent>
+        <div
+          className="content"
+        >
+          Application Header
+        </div>
+      </HeaderContent>
+    </div>
+  </Header>
+</Component>
+`;

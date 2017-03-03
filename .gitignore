@@ -4,3 +4,5 @@ dist
 build
 .fusebox
 node_modules
+public/app*
+public/styles

@@ -10,10 +10,19 @@ import { StoryGroupView, menu } from './story_group';
 import * as SplitPane from 'react-split-pane';
 import * as Tabs from 'react-simpletabs';
 import * as marked from 'marked';
-import { Story, catalogue } from '../story';
-import { DiffView } from 'diff-view';
+import { Story } from '../story';
+import { RouteState } from '../state/state';
+
+import { MonacoEditor } from './editor';
 
 require('./highlighter');
+
+const requireConfig = {
+  url: 'https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.1/require.min.js',
+  paths: {
+    'vs': '/libs/monaco/0.8.0/vs'
+  }
+};
 
 // Synchronous highlighting with highlight.js
 marked.setOptions({
@@ -22,7 +31,7 @@ marked.setOptions({
   }
 });
 
-
+const resizeEvent = new Event('resize');
 const Panel = Collapse.Panel;
 const container = style({
   width: '100%',
@@ -160,7 +169,7 @@ const toolBelt = style({
   padding: '6px'
 });
 
-function renderFields(current: Object) {
+function renderFields(state: RouteState, current: Object) {
   if (!current) {
     return <div>No tests ...</div>;
   }
@@ -168,13 +177,13 @@ function renderFields(current: Object) {
     if (typeof current[k] === 'string') {
       return current[k] ?
         <div key={i}><span className="fail">[FAIL] {`${k}: ${current[k]}`}</span></div> :
-        catalogue.hidePassing || <div key={i}><span className="pass">[PASS] {`${k}`}</span></div>;
+        state.catalogue.hidePassing || <div key={i}><span className="pass">[PASS] {`${k}`}</span></div>;
     } else {
       return (
         <div key={i}>
           <span>{k}</span>
           <div className={header}>
-            {renderFields(current[k])}
+            {renderFields(state, current[k])}
           </div>
         </div>
       );
@@ -186,47 +195,50 @@ function renderFields(current: Object) {
 
 export interface StoriesTitleParams {
   testsRoot: Object;
+  state: RouteState;
 }
 
-export const StoryTestsTitle = observer(({ testsRoot }: StoriesTitleParams) => (
-  <span>Story Tests [<span className="pass">{catalogue.count(testsRoot, false)}</span> / <span className="fail">{catalogue.count(testsRoot, true)}</span>]</span>
+export const StoryTestsTitle = observer(({ testsRoot, state }: StoriesTitleParams) => (
+  <span>Story Tests [<span className="pass">{state.catalogue.count(testsRoot, false)}</span> / <span className="fail">{state.catalogue.count(testsRoot, true)}</span>]</span>
 ));
 
 export interface StoriesParams {
   story: Story;
   testsRoot: Object;
   title: any;
+  state: RouteState;
 }
 
-export const StoryTests = observer(({ testsRoot, story }: StoriesParams) => (
+export const StoryTests = observer(({ testsRoot, story, state }: StoriesParams) => (
   <div className={bottomTabPane}>
     <div className={hidePassing}>
-      <input type="checkbox" defaultChecked={catalogue.hidePassing} onChange={(e) => { catalogue.hidePassing = e.currentTarget.checked; }} /> Hide Passing
+      <input type="checkbox" defaultChecked={state.catalogue.hidePassing} onChange={(e) => { state.catalogue.hidePassing = e.currentTarget.checked; }} /> Hide Passing
     </div>
     {story && story.testing && <span>Running tests ...</span>}
-    {renderFields(testsRoot)}
+    {renderFields(state, testsRoot)}
   </div>
 ));
 
 // All tests
 
-export const AllTestsTitle = observer(() => (
+export interface AllTestsProps {
+  title?: any;
+  state: RouteState;
+}
+
+export const AllTestsTitle = observer(({ state }: AllTestsProps) => (
   <span>All Tests [
-    <span className="pass">{catalogue.passingTests}</span> /
-    <span className="fail">{catalogue.failingTests}</span>]
+    <span className="pass">{state.catalogue.passingTests}</span> /
+    <span className="fail">{state.catalogue.failingTests}</span>]
   </span>
 ));
 
-export interface AllTestsProps {
-  title: any;
-}
-
-export const AllTests = observer(({}: AllTestsProps) => (
+export const AllTests = observer(({ state }: AllTestsProps) => (
   <div className={bottomTabPane}>
     <div className={hidePassing}>
-      <input type="checkbox" defaultChecked={catalogue.hidePassing} onChange={(e) => { catalogue.hidePassing = e.currentTarget.checked; }} /> Hide Passing
+      <input type="checkbox" defaultChecked={state.catalogue.hidePassing} onChange={(e) => { state.catalogue.hidePassing = e.currentTarget.checked; }} /> Hide Passing
     </div>
-    {renderFields(catalogue.catalogue)}
+    {renderFields(state, state.catalogue.catalogue)}
   </div>
 ));
 
@@ -236,12 +248,13 @@ export interface ActionProps {
 }
 export const Actions = observer(({ story }: ActionProps) => {
   return (
-  <div className={bottomTabPane}>
-    {story && story.actions.map(a => (
-      <div>{a}</div>
-    ))}
-  </div>
-); });
+    <div className={bottomTabPane}>
+      {story && story.actions.map(a => (
+        <div>{a}</div>
+      ))}
+    </div>
+  );
+});
 
 
 export interface SnapshotsProps {
@@ -269,23 +282,57 @@ function updateSnapshot(button: HTMLButtonElement, story: Story, snapshotName) {
     });
 }
 
+@observer
+export class Snapshots extends React.PureComponent<SnapshotsProps, {}> {
 
-export const Snapshots = observer(({ story }: SnapshotsProps) => (
-  <div className={bottomTabPane}>
-    <div className={toolBelt}>
-      <select onChange={e => { story.activeSnapshot = parseInt(e.currentTarget.value, 10); }}>
-        {story.snapshots.map((s, i) => (
-          <option value={i} key={i}>{s.name}</option>
-        ))}
-      </select>
-      <button className={snapshotSelect} onClick={(e) => updateSnapshot(e.currentTarget, story, story.snapshots[story.activeSnapshot].name)}>Update Snapshot</button>
-    </div>
+  editor: monaco.editor.IStandaloneDiffEditor;
 
-    <div dangerouslySetInnerHTML={{ __html: DiffView.compare(story.snapshots[story.activeSnapshot].current, story.snapshots[story.activeSnapshot].expected, 'Current', 'Server Version')['outerHTML'] }}></div>
-  </div>
-));
+  initEditor = (mountEditor: any) => {
+    this.editor = mountEditor as any;
+    this.setModel();
+  }
 
-export const StoriesView = observer(({ state }: any) => {
+  setModel = () => {
+    let original = monaco.editor.createModel(this.props.story.snapshots[this.props.story.activeSnapshot].current, 'text/plain');
+    let modified = monaco.editor.createModel(this.props.story.snapshots[this.props.story.activeSnapshot].expected, 'text/plain');
+    monaco.editor.setModelLanguage(original, 'json');
+    monaco.editor.setModelLanguage(modified, 'json');
+
+    this.editor.setModel({ original, modified });
+  }
+
+  render() {
+    const story = this.props.story;
+    return (
+      <div className={bottomTabPane} style={{ overflow: 'hidden' }}>
+        <div className={toolBelt}>
+          <select onChange={e => { story.activeSnapshot = parseInt(e.currentTarget.value, 10); }}>
+            {story.snapshots.map((s, i) => (
+              <option value={i} key={i}>{s.name}</option>
+            ))}
+          </select>
+          <button className={snapshotSelect} onClick={(e) => updateSnapshot(e.currentTarget, story, story.snapshots[story.activeSnapshot].name)}>Update Snapshot</button>
+        </div>
+
+        <MonacoEditor key="HistoryView"
+          editorDidMount={this.initEditor}
+          theme="vs-light"
+          width="100%"
+          height="100%"
+          clientValue={this.props.story.snapshots[this.props.story.activeSnapshot].current}
+          serverValue={this.props.story.snapshots[this.props.story.activeSnapshot].expected}
+          requireConfig={requireConfig}
+        />
+      </div>
+    );
+  }
+};
+
+interface Props {
+  state: RouteState;
+}
+
+export const StoriesView = observer(({ state }: Props) => {
   let RenderStory: any = null;
   const rootGroup = stories(state);
   let storyPath = state.path;
@@ -302,11 +349,21 @@ export const StoriesView = observer(({ state }: any) => {
 
     for (let i = 1; i < storyPath.length - 1; i++) {
       group = group.storyGroups[storyPath[i]];
+
+      if (!group) {
+        location.href = '/';
+        return <div>Invalid path. Please <a href="/">Go Back</a></div>;
+      }
+
       groupPath.push(group.name);
     }
 
     // now find the story
     story = group.stories[storyPath[storyPath.length - 1]];
+    if (!story) {
+      location.href = '/';
+      return <div>Invalid path. Please <a href="/">Go Back</a></div>;
+    }
     groupPath.push(story.name);
     const cmp = story.renderedComponent;
 
@@ -317,7 +374,7 @@ export const StoriesView = observer(({ state }: any) => {
   }
 
   // find the root in catalogue
-  let testsRoot = catalogue.catalogue[groupPath[0]];
+  let testsRoot = state.catalogue.catalogue[groupPath[0]];
   for (let i = 1; i < groupPath.length; i++) {
     if (testsRoot) {
       testsRoot = testsRoot[groupPath[i]];
@@ -349,18 +406,21 @@ export const StoriesView = observer(({ state }: any) => {
         </div>
         <SplitPane split="horizontal"
           defaultSize={parseInt(localStorage.getItem('luis-h-splitPos'), 10)}
-          onChange={size => localStorage.setItem('luis-h-splitPos', size)} minSize={100}>
+          onChange={size => {
+            localStorage.setItem('luis-h-splitPos', size);
+            window.dispatchEvent(resizeEvent);
+          }} minSize={100}>
           <div className={content}>
             <RenderStory />
           </div>
           <div className={tabs}>
-            <Tabs tabActive={3}>
+            <Tabs tabActive={state.activeTab} onAfterChange={(index) => state.activeTab = index}>
               <div title="Info" className={bottomTabPane}>
-                { story && <div dangerouslySetInnerHTML={{__html: marked(story.info || 'No Info') }}></div> }
+                {story && <div dangerouslySetInnerHTML={{ __html: marked(story.info || 'No Info') }}></div>}
               </div>
               <Actions title="Actions" story={story} />
-              <StoryTests title={testsRoot ? <StoryTestsTitle testsRoot={testsRoot} /> : 'Story Tests'} story={story} testsRoot={testsRoot} />
-              <AllTests title={<AllTestsTitle />} />
+              <StoryTests state={state} title={testsRoot ? <StoryTestsTitle state={state} testsRoot={testsRoot} /> : 'Story Tests'} story={story} testsRoot={testsRoot} />
+              <AllTests state={state} title={<AllTestsTitle state={state} />} />
               {story && story.snapshots.length &&
                 <Snapshots title={<SnapshotsTitle story={story} />} story={story} />}
             </Tabs>
@@ -370,4 +430,5 @@ export const StoriesView = observer(({ state }: any) => {
     </div>
   );
 });
+
 

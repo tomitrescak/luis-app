@@ -1,3 +1,4 @@
 import * as React from 'react';
+import { Header } from 'semantic-ui-react';
 
-export const Header = () => <h1>Header 123</h1>;
+export const TopHeader = () => <Header icon="user" content="Application Header" />;

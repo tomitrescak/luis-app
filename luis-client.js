@@ -1,4 +1,4 @@
-const rootFolder = 'build/luis';
+const rootFolder = 'public';
 const fsbx = require('fuse-box');
 const StubPlugin = require('proxyrequire').FuseBoxStubPlugin(/[^(stories.tsx)]\.ts/);
 
@@ -23,7 +23,8 @@ fsbx.FuseBox.init({
       //   resolve: (file) => `/resources/${file}`
       // }),
       fsbx.CSSPlugin({
-        outFile: (file) => `${rootFolder}/${file}`
+        outFile: (file) => `${rootFolder}/styles/${file}`,
+        inject: (file) => `styles/${file}`,
       })
     ]
   ],

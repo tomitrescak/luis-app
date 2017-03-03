@@ -17,19 +17,18 @@ import { registerGlobals } from './luis/louis';
 registerGlobals();
 
 // configure expectations
-import { ExtendedImport } from 'luis';
 import { createClientSnapshotMatcher } from './luis/tests';
-import * as expectImp from 'expect';
-createClientSnapshotMatcher(expectImp);
-global.expect = expectImp;
+
+import * as expect from 'jest-matchers';
+global.expect = expect;
+createClientSnapshotMatcher(expect);
 
 // configure hmr
-import {setStatefulModules} from './hmr';
-setStatefulModules('hmr');
-
-declare global {
-  const expect: <T>(obj: T) => ExtendedImport<T>;
-}
+import { setStatefulModules } from './hmr';
+setStatefulModules(name => {
+  // Add the things you think are stateful:
+  return /state/.test(name);
+});
 
 // import all stories
 import './components/tests';

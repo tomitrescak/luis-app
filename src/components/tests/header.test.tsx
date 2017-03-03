@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Header } from '../header';
+import { TopHeader } from '../header';
 import { mount } from 'enzyme';
 
 // this is extended 'expectatio' library from 'https://github.com/mjackson/expect'
@@ -8,7 +8,7 @@ import { mount } from 'enzyme';
 describe('Header', () => {
 
   story('Default View', 'Some **description**', () => {
-    const component = <Header />;
+    const component = <TopHeader />;
 
     it('Renders correctly', function () {
       expect(mount(component)).toMatchSnapshot();
@@ -25,7 +25,7 @@ describe('Header', () => {
     ));
 
     story('Decorated View', 'Some **other description**', () => {
-      const component = <Header />;
+      const component = <TopHeader />;
 
       it('Renders correctly', function () {
         expect(mount(component)).toMatchSnapshot();

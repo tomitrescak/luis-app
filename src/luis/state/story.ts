@@ -1,5 +1,5 @@
 import { IObservableArray, observable } from 'mobx';
-import { formatComponent } from './state/helpers';
+import { formatComponent } from './helpers';
 
 export interface Snapshot {
   current: string;
@@ -18,7 +18,7 @@ export class Story {
   runTests = false;
   tests: () => void;
 
-  @observable activeSnapshot: number = 0;
+  @observable activeSnapshot: number;
   @observable snapshots: Snapshot[] = [];
   @observable testing: boolean = true;
 

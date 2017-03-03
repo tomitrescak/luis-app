@@ -27,15 +27,6 @@ declare function story(storyName: string, info: string | Function, component?: F
 declare function decorator(decorator: any): void;
 declare function action(name: string, impl?: Function): any;
 declare function tests(impl: Function): void;
-declare function describe(storyName: any, func: any): TestResults;
-declare function it(desc: any, func: any): void;
-declare function before(func: any): void;
-declare function beforeEach(func: any): void;
-declare function after(func: any): void;
-declare function afterEach(func: any): void;
-declare function fit(desc: any, func: any): void;
-declare function xit(desc: any, func: any): void;
-declare function xdescribe(storyName: any, func: any): any;
 declare function registerGlobals(): void;
 declare function storiesOf(name: string, imp?: Function | any): any;
 declare function stories(state: {

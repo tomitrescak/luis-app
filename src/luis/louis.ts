@@ -1,6 +1,7 @@
 
 import * as tests from './tests';
 import { Story } from './story';
+import { state } from './state/state';
 
 export class StoryGroup {
   name: string;
@@ -130,8 +131,6 @@ export function decorator(decorator: any) {
   currentGroup.decorator = decorator;
 }
 
-let viewedStory: Story = null;
-
 function action(actionName: string, impl?: Function) {
   return (...params: any[]) => {
     if (console.group) {
@@ -141,12 +140,12 @@ function action(actionName: string, impl?: Function) {
       console.groupEnd();
     }
     if (impl) { impl(); }
-    (viewedStory || currentStory).actions.push(`${actionName} (${params.map(p => p && p.target ? 'event' : JSON.stringify(p || 'null')).join(', ')})`);
+    (state.viewedStory || currentStory).actions.push(`${actionName} (${params.map(p => p && p.target ? 'event' : JSON.stringify(p || 'null')).join(', ')})`);
   };
 }
 
 export function changeStory(story: Story) {
-  viewedStory = story;
+  state.viewedStory = story;
 }
 
 export function stories(state: { runningTests: boolean }) {

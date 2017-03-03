@@ -7,7 +7,6 @@ const BodyProxy = proxy(() => require('../body').Body, {
 });
 
 describe('Body', () => {
-
   story('Stubbed', () => {
     const proxiedBody = <BodyProxy />
     it ('is false', function() {
